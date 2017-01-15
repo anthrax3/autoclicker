@@ -47,6 +47,15 @@ void fillEventRelease(XEvent *ev) {
     ev->type = ButtonRelease;
 }
 
+void sendEvent(Display *display, XEvent *ev) {
+    if(XSendEvent(display, PointerWindow, True, ButtonPressMask, ev) == 0) {
+        fprintf (stderr, "Error during sending event\n");
+        exit(EXIT_FAILURE);
+    }
+
+    XFlush(display);
+}
+
 void autoClic(Options *opts) {
     Display *display;
     XEvent event;
@@ -73,27 +82,16 @@ void autoClic(Options *opts) {
 
     for(i = 0; i < opts->clics || !opts->clics; i++) {
         fillEventPress(&event);
+        sendEvent(display, &event);
 
-        if(XSendEvent(display, PointerWindow, True, ButtonPressMask, &event) == 0) {
-            fprintf (stderr, "Error during sending the event\n");
-            exit(EXIT_FAILURE);
-        }
+        usleep(1000);
 
-        XFlush(display);
+        fillEventRelease(&event);
+        sendEvent(display, &event);
 
         if(opts->ms > 0) {
             usleep(opts->ms*1000);
         }
-
-        fillEventRelease(&event);
-
-        if(XSendEvent(display, PointerWindow, True, ButtonPressMask, &event) == 0) {
-            fprintf (stderr, "Error during sending the event\n");
-            exit(EXIT_FAILURE);
-        }
-
-        XFlush(display);
-
     }
 }
 
